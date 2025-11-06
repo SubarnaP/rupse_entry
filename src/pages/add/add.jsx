@@ -12,7 +12,7 @@ const Add = () => {
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
-    qrid: '' // ✅ will be auto-filled from URL
+    qrid: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -20,8 +20,17 @@ const Add = () => {
   useEffect(() => {
     const urlParts = window.location.pathname.split('/');
     const lastPart = urlParts[urlParts.length - 1];
-    if (!isNaN(lastPart)) {
+    
+    console.log('URL pathname:', window.location.pathname);
+    console.log('URL parts:', urlParts);
+    console.log('Last part:', lastPart);
+    
+    // Check if lastPart exists and is not 'add'
+    if (lastPart && lastPart !== 'add' && lastPart.trim() !== '') {
+      console.log('Setting QRID to:', lastPart);
       setFormData((prev) => ({ ...prev, qrid: lastPart }));
+    } else {
+      console.log('QRID not set - last part is:', lastPart);
     }
   }, []);
 
@@ -33,6 +42,19 @@ const Add = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // ✅ Prepare data with QRID as number if it exists
+    const dataToSend = {
+      name: formData.name,
+      mobile: formData.mobile,
+      qrid: formData.qrid ? parseInt(formData.qrid, 10) : null
+    };
+    
+    // ✅ Debug: Log the form data before sending
+    console.log('Form data being sent:', dataToSend);
+    console.log('QRID value:', dataToSend.qrid);
+    console.log('QRID type:', typeof dataToSend.qrid);
+    
     try {
       const response = await fetch(
         'https://rupse_crm_backend.poudelanish17.com.np/api/unprotected/v1/forms/insert',
@@ -41,19 +63,37 @@ const Add = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData), // ✅ sends { name, mobile, qrid }
+          body: JSON.stringify(dataToSend), 
         }
       );
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
+        const data = await response.json();
+        console.log('Success response:', data);
         setFormData({ name: '', mobile: '', qrid: formData.qrid });
         alert('Submitted successfully!');
       } else {
-        alert('Failed to submit. Please try again.');
+        // ✅ Get detailed error information
+        const errorText = await response.text();
+        console.error('Error response status:', response.status);
+        console.error('Error response body:', errorText);
+        
+        let errorMessage = 'Failed to submit. ';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage += errorJson.message || errorJson.error || 'Please try again.';
+        } catch {
+          errorMessage += `Server error: ${response.status}`;
+        }
+        
+        alert(errorMessage);
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error submitting form.');
+      console.error('Network or other error:', error);
+      alert('Error submitting form: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }

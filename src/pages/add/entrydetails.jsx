@@ -18,19 +18,85 @@ const EntryDetails = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [groupedEntries, setGroupedEntries] = useState({});
+  const [urlQRID, setUrlQRID] = useState(null); // ✅ Store QRID from URL
+
+  // ✅ Extract QRID from URL (same logic as add.jsx)
+  useEffect(() => {
+    const urlParts = window.location.pathname.split('/');
+    const lastPart = urlParts[urlParts.length - 1];
+    
+    console.log('Entry Details - URL pathname:', window.location.pathname);
+    console.log('Entry Details - Last part:', lastPart);
+    
+    // Check if lastPart exists and is not 'entry-details'
+    if (lastPart && lastPart !== 'entry-details' && lastPart.trim() !== '') {
+      console.log('Entry Details - Setting QRID filter to:', lastPart);
+      setUrlQRID(lastPart);
+    }
+  }, []);
 
   useEffect(() => {
     fetchEntries();
   }, []);
 
+  // ✅ Group entries by QRID whenever entries or search changes
   useEffect(() => {
-    const filtered = entries.filter(
+    let filtered = entries.filter(
       (entry) =>
         entry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         entry.mobile.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    
+    // ✅ If QRID is in URL, filter entries to show only that QRID
+    if (urlQRID) {
+      const qridNumber = urlQRID; // Keep as string to match backend format
+      filtered = filtered.filter(entry => entry.qr === qridNumber || entry.qr === parseInt(qridNumber, 10));
+      console.log(`Filtering entries for QR ID: ${qridNumber}`, filtered);
+    }
+    
     setFilteredEntries(filtered);
-  }, [searchQuery, entries]);
+    
+    // Group filtered entries by QR ID (from backend it's 'qr' field, not 'qrid')
+    const grouped = filtered.reduce((acc, entry) => {
+      const qrId = entry.qr || 'No QR ID';
+      if (!acc[qrId]) {
+        acc[qrId] = [];
+      }
+      acc[qrId].push(entry);
+      return acc;
+    }, {});
+    
+    // ✅ Sort each QR ID group by name
+    Object.keys(grouped).forEach(qrId => {
+      grouped[qrId].sort((a, b) => a.name.localeCompare(b.name));
+    });
+    
+    setGroupedEntries(grouped);
+  }, [searchQuery, entries, urlQRID]);
+
+  // ✅ Function to generate consistent colors for each QRID
+  const getQRIDColor = (qrid) => {
+    const colors = [
+      { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', badge: '#667eea', light: 'rgba(102, 126, 234, 0.1)' },
+      { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', badge: '#f093fb', light: 'rgba(240, 147, 251, 0.1)' },
+      { bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', badge: '#4facfe', light: 'rgba(79, 172, 254, 0.1)' },
+      { bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', badge: '#43e97b', light: 'rgba(67, 233, 123, 0.1)' },
+      { bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', badge: '#fa709a', light: 'rgba(250, 112, 154, 0.1)' },
+      { bg: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)', badge: '#30cfd0', light: 'rgba(48, 207, 208, 0.1)' },
+      { bg: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', badge: '#a8edea', light: 'rgba(168, 237, 234, 0.1)' },
+      { bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', badge: '#ff9a9e', light: 'rgba(255, 154, 158, 0.1)' },
+      { bg: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', badge: '#fcb69f', light: 'rgba(252, 182, 159, 0.1)' },
+      { bg: 'linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%)', badge: '#ff6e7f', light: 'rgba(255, 110, 127, 0.1)' },
+    ];
+    
+    // Use QRID to consistently pick a color
+    const index = typeof qrid === 'string' && qrid !== 'No QR ID' 
+      ? parseInt(qrid) % colors.length 
+      : Math.abs(qrid?.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0) % colors.length;
+    
+    return colors[index];
+  };
 
   const fetchEntries = async () => {
     try {
@@ -259,6 +325,40 @@ const EntryDetails = () => {
       gap: { xs: '16px', sm: '20px', md: '24px' },
       marginBottom: '40px'
     },
+    qrSection: {
+      marginBottom: '40px'
+    },
+    qrSectionHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '16px',
+      marginBottom: '20px',
+      padding: '16px 24px',
+      borderRadius: '16px',
+      backdropFilter: 'blur(10px)',
+      border: '2px solid rgba(255, 255, 255, 0.3)',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+    },
+    qrBadge: {
+      padding: '12px 24px',
+      borderRadius: '12px',
+      fontWeight: '800',
+      fontSize: '18px',
+      color: '#ffffff',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    },
+    qrCount: {
+      color: '#ffffff',
+      fontSize: '16px',
+      fontWeight: '600',
+      background: 'rgba(255, 255, 255, 0.2)',
+      padding: '8px 16px',
+      borderRadius: '8px',
+      backdropFilter: 'blur(5px)'
+    },
     entryCard: {
       background: 'rgba(255, 255, 255, 0.98)',
       backdropFilter: 'blur(10px)',
@@ -267,10 +367,19 @@ const EntryDetails = () => {
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12)',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       border: '1px solid rgba(255, 255, 255, 0.8)',
+      position: 'relative',
       '&:hover': {
         transform: 'translateY(-8px)',
         boxShadow: '0 12px 40px rgba(102, 126, 234, 0.25)',
       }
+    },
+    qrColorBar: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '6px',
+      zIndex: 1
     },
     cardHeader: {
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -483,41 +592,71 @@ const EntryDetails = () => {
       {/* Content */}
       <Box sx={styles.contentContainer}>
         {filteredEntries.length > 0 ? (
-          <Box sx={styles.gridContainer}>
-            {filteredEntries.map((entry, index) => (
-              <Card key={index} sx={styles.entryCard}>
-                <Box sx={styles.cardHeader}>
-                  <Typography sx={styles.cardTitle}>
-                    <PersonIcon sx={{ fontSize: '24px' }} />
-                    {entry.name}
-                  </Typography>
-                </Box>
-                <CardContent sx={styles.cardContent}>
-                  <Box sx={styles.infoRow}>
-                    <PhoneIcon sx={{ color: '#667eea', fontSize: '20px' }} />
-                    <Box>
-                      <Typography sx={styles.infoLabel}>Phone</Typography>
-                      <Typography sx={styles.infoValue}>{entry.mobile}</Typography>
+          <>
+            {Object.entries(groupedEntries)
+              .sort(([qridA], [qridB]) => {
+                // ✅ Sort QRIDs: 'No QR ID' goes last, numbers are sorted ascending
+                if (qridA === 'No QR ID') return 1;
+                if (qridB === 'No QR ID') return -1;
+                return parseInt(qridA) - parseInt(qridB);
+              })
+              .map(([qrid, qrEntries]) => {
+              const colorScheme = getQRIDColor(qrid);
+              return (
+                <Box key={qrid} sx={styles.qrSection}>
+                  {/* QRID Section Header */}
+                  <Box sx={{ ...styles.qrSectionHeader, background: colorScheme.light }}>
+                    <Box sx={{ ...styles.qrBadge, background: colorScheme.bg }}>
+                      🎯 QR ID: {qrid}
+                    </Box>
+                    <Box sx={styles.qrCount}>
+                      {qrEntries.length} {qrEntries.length === 1 ? 'entry' : 'entries'}
                     </Box>
                   </Box>
-                  {entry.qrid && (
-                    <Box sx={{ ...styles.infoRow, borderBottom: 'none' }}>
-                      <Typography sx={styles.infoLabel}>QR ID</Typography>
-                      <Chip 
-                        label={entry.qrid} 
-                        size="small"
-                        sx={{ 
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          color: '#ffffff',
-                          fontWeight: '700'
-                        }}
-                      />
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+
+                  {/* Grid of Cards for this QRID */}
+                  <Box sx={styles.gridContainer}>
+                    {qrEntries.map((entry, index) => (
+                      <Card key={index} sx={styles.entryCard}>
+                        {/* Color bar at top of card */}
+                        <Box sx={{ ...styles.qrColorBar, background: colorScheme.bg }} />
+                        
+                        <Box sx={styles.cardHeader}>
+                          <Typography sx={styles.cardTitle}>
+                            <PersonIcon sx={{ fontSize: '24px' }} />
+                            {entry.name}
+                          </Typography>
+                        </Box>
+                        <CardContent sx={styles.cardContent}>
+                          <Box sx={styles.infoRow}>
+                            <PhoneIcon sx={{ color: '#667eea', fontSize: '20px' }} />
+                            <Box>
+                              <Typography sx={styles.infoLabel}>Phone</Typography>
+                              <Typography sx={styles.infoValue}>{entry.mobile}</Typography>
+                            </Box>
+                          </Box>
+                          {entry.qr && (
+                            <Box sx={{ ...styles.infoRow, borderBottom: 'none' }}>
+                              <Typography sx={styles.infoLabel}>QR ID</Typography>
+                              <Chip 
+                                label={entry.qr} 
+                                size="small"
+                                sx={{ 
+                                  background: colorScheme.bg,
+                                  color: '#ffffff',
+                                  fontWeight: '700'
+                                }}
+                              />
+                            </Box>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Box>
+                </Box>
+              );
+            })}
+          </>
         ) : (
           <Box sx={styles.emptyState}>
             <Box sx={styles.emptyIcon}>🔍</Box>
