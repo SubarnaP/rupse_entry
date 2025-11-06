@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@mui/material";
+import { Button, Card, CardContent, Typography, Box, Chip, Divider, Skeleton } from "@mui/material";
 import { useAuthGuard } from "../login/auth.jsx"; // ✅ Import authentication guard
+import PersonIcon from '@mui/icons-material/Person';
+import PhoneIcon from '@mui/icons-material/Phone';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import SearchIcon from '@mui/icons-material/Search';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const EntryDetails = () => {
   const navigate = useNavigate();
@@ -85,145 +90,250 @@ const EntryDetails = () => {
     }
   };
 
- 
-  if (error) {
-    return (
-      <div style={styles.errorContainer}>
-        <p style={styles.errorText}>{error}</p>
-      </div>
-    );
-  }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate('/login');
+  };
 
   const styles = {
     container: {
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '40px 20px',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    },
-    headerActions: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      maxWidth: '1200px',
-      margin: '0 auto 30px'
-    },
-    header: {
-      maxWidth: '1200px',
-      margin: '0 auto 30px',
-      textAlign: 'center'
-    },
-    title: {
-      fontSize: '36px',
-      fontWeight: '800',
-      background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      marginBottom: '10px',
-      letterSpacing: '-0.5px'
-    },
-    subtitle: {
-      color: '#ffffff',
-      fontSize: '16px',
-      opacity: 0.9
-    },
-    searchContainer: {
-      maxWidth: '1200px',
-      margin: '0 auto 30px',
-      position: 'relative'
-    },
-    searchInput: {
-      width: '100%',
-      padding: '16px 50px 16px 20px',
-      fontSize: '16px',
-      border: 'none',
-      borderRadius: '16px',
-      backgroundColor: '#ffffff',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-      outline: 'none',
-      transition: 'all 0.3s ease',
-      boxSizing: 'border-box'
-    },
-    searchIcon: {
-      position: 'absolute',
-      right: '20px',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      fontSize: '20px',
-      color: '#667eea',
-      pointerEvents: 'none'
-    },
-    listContainer: {
-      maxWidth: '1200px',
-      margin: '0 auto'
-    },
-    entryList: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-      gap: '20px',
-      marginBottom: '40px'
-    },
-    entryCard: {
-      background: '#ffffff',
-      borderRadius: '16px',
-      padding: '24px',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-      transition: 'all 0.3s ease',
-      cursor: 'pointer',
+      padding: { xs: '20px', sm: '30px', md: '40px' },
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       position: 'relative',
       overflow: 'hidden'
     },
-    entryCardHover: {
-      transform: 'translateY(-5px)',
-      boxShadow: '0 8px 30px rgba(102, 126, 234, 0.3)'
-    },
-    cardGradient: {
+    backgroundPattern: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
-      height: '4px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      bottom: 0,
+      opacity: 0.05,
+      background: 'radial-gradient(circle at 20% 50%, white 2px, transparent 2px), radial-gradient(circle at 80% 80%, white 2px, transparent 2px)',
+      backgroundSize: '60px 60px',
+      pointerEvents: 'none'
     },
-    entryName: {
-      fontSize: '20px',
-      fontWeight: '700',
-      color: '#1a1a2e',
-      marginBottom: '12px',
+    topBar: {
+      maxWidth: '1400px',
+      margin: '0 auto 30px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: '15px',
+      position: 'relative',
+      zIndex: 1
+    },
+    headerSection: {
+      flex: '1',
+      minWidth: '250px'
+    },
+    title: {
+      fontSize: { xs: '28px', sm: '36px', md: '42px' },
+      fontWeight: '800',
+      color: '#ffffff',
+      marginBottom: '8px',
+      letterSpacing: '-1px',
+      textShadow: '0 2px 10px rgba(0,0,0,0.1)'
+    },
+    subtitle: {
+      color: 'rgba(255, 255, 255, 0.95)',
+      fontSize: { xs: '14px', sm: '16px' },
+      fontWeight: '500',
       display: 'flex',
       alignItems: 'center',
       gap: '8px'
     },
-    nameIcon: {
-      fontSize: '18px'
+    actionButtons: {
+      display: 'flex',
+      gap: '12px',
+      flexWrap: 'wrap'
     },
-    entryMobile: {
-      fontSize: '16px',
-      color: '#6c757d',
+    button: {
+      background: 'rgba(255, 255, 255, 0.95)',
+      color: '#667eea',
+      padding: { xs: '10px 16px', sm: '12px 24px' },
+      borderRadius: '12px',
+      fontSize: { xs: '14px', sm: '15px' },
+      fontWeight: '700',
+      textTransform: 'none',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)',
+      transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       gap: '8px',
+      '&:hover': {
+        background: '#ffffff',
+        transform: 'translateY(-2px)',
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
+      }
+    },
+    logoutButton: {
+      background: 'rgba(239, 68, 68, 0.15)',
+      color: '#ffffff',
+      border: '2px solid rgba(255, 255, 255, 0.3)',
+      '&:hover': {
+        background: 'rgba(239, 68, 68, 0.25)',
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+      }
+    },
+    searchSection: {
+      maxWidth: '1400px',
+      margin: '0 auto 40px',
+      position: 'relative',
+      zIndex: 1
+    },
+    searchBox: {
+      position: 'relative',
+      background: 'rgba(255, 255, 255, 0.98)',
+      borderRadius: '16px',
+      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
+      overflow: 'hidden',
+      backdropFilter: 'blur(10px)'
+    },
+    searchInput: {
+      width: '100%',
+      padding: { xs: '16px 50px 16px 50px', sm: '18px 60px 18px 60px' },
+      fontSize: { xs: '15px', sm: '16px' },
+      border: 'none',
+      outline: 'none',
+      background: 'transparent',
+      fontWeight: '500',
+      color: '#1f2937',
+      '&::placeholder': {
+        color: '#9ca3af'
+      }
+    },
+    searchIconContainer: {
+      position: 'absolute',
+      left: { xs: '16px', sm: '20px' },
+      top: '50%',
+      transform: 'translateY(-50%)',
+      color: '#667eea',
+      display: 'flex',
+      alignItems: 'center'
+    },
+    contentContainer: {
+      maxWidth: '1400px',
+      margin: '0 auto',
+      position: 'relative',
+      zIndex: 1
+    },
+    statsBar: {
+      background: 'rgba(255, 255, 255, 0.15)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '12px',
+      padding: '16px 24px',
+      marginBottom: '30px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: '12px',
+      border: '1px solid rgba(255, 255, 255, 0.2)'
+    },
+    statItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      color: '#ffffff'
+    },
+    statLabel: {
+      fontSize: '14px',
+      opacity: 0.9,
       fontWeight: '500'
     },
-    mobileIcon: {
-      fontSize: '16px'
+    statValue: {
+      fontSize: '24px',
+      fontWeight: '800'
     },
-    noResults: {
+    gridContainer: {
+      display: 'grid',
+      gridTemplateColumns: {
+        xs: '1fr',
+        sm: 'repeat(auto-fill, minmax(340px, 1fr))',
+        md: 'repeat(auto-fill, minmax(360px, 1fr))'
+      },
+      gap: { xs: '16px', sm: '20px', md: '24px' },
+      marginBottom: '40px'
+    },
+    entryCard: {
+      background: 'rgba(255, 255, 255, 0.98)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '20px',
+      overflow: 'hidden',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12)',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      border: '1px solid rgba(255, 255, 255, 0.8)',
+      '&:hover': {
+        transform: 'translateY(-8px)',
+        boxShadow: '0 12px 40px rgba(102, 126, 234, 0.25)',
+      }
+    },
+    cardHeader: {
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px 24px',
+      position: 'relative'
+    },
+    cardContent: {
+      padding: '24px'
+    },
+    cardTitle: {
+      fontSize: '22px',
+      fontWeight: '800',
+      color: '#ffffff',
+      marginBottom: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    },
+    infoRow: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '12px 0',
+      borderBottom: '1px solid #f3f4f6'
+    },
+    infoLabel: {
+      fontSize: '13px',
+      fontWeight: '600',
+      color: '#9ca3af',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+      minWidth: '80px'
+    },
+    infoValue: {
+      fontSize: '16px',
+      fontWeight: '600',
+      color: '#1f2937',
+      flex: 1
+    },
+    emptyState: {
       textAlign: 'center',
-      padding: '60px 20px',
-      background: '#ffffff',
-      borderRadius: '16px',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+      padding: { xs: '40px 20px', sm: '60px 40px' },
+      background: 'rgba(255, 255, 255, 0.95)',
+      borderRadius: '20px',
+      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+      backdropFilter: 'blur(10px)'
     },
-    noResultsText: {
-      fontSize: '18px',
-      color: '#6c757d',
-      marginTop: '10px'
+    emptyIcon: {
+      fontSize: { xs: '60px', sm: '80px' },
+      marginBottom: '20px',
+      opacity: 0.5
     },
-    noResultsIcon: {
-      fontSize: '48px',
-      marginBottom: '10px'
+    emptyTitle: {
+      fontSize: { xs: '20px', sm: '24px' },
+      fontWeight: '700',
+      color: '#374151',
+      marginBottom: '12px'
+    },
+    emptyText: {
+      fontSize: { xs: '15px', sm: '16px' },
+      color: '#6b7280',
+      lineHeight: '1.6'
     },
     loadingContainer: {
       minHeight: '100vh',
@@ -231,128 +341,198 @@ const EntryDetails = () => {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    },
-    spinner: {
-      width: '50px',
-      height: '50px',
-      border: '5px solid rgba(255, 255, 255, 0.3)',
-      borderTop: '5px solid #ffffff',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      gap: '20px'
     },
     loadingText: {
       color: '#ffffff',
-      fontSize: '18px',
-      marginTop: '20px',
-      fontWeight: '500'
+      fontSize: { xs: '16px', sm: '18px' },
+      fontWeight: '600'
     },
     errorContainer: {
       minHeight: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       padding: '20px'
     },
+    errorBox: {
+      background: 'rgba(239, 68, 68, 0.15)',
+      backdropFilter: 'blur(10px)',
+      padding: { xs: '24px', sm: '32px' },
+      borderRadius: '20px',
+      border: '2px solid rgba(255, 255, 255, 0.3)',
+      maxWidth: '500px',
+      textAlign: 'center'
+    },
+    errorIcon: {
+      fontSize: { xs: '48px', sm: '64px' },
+      marginBottom: '16px'
+    },
     errorText: {
       color: '#ffffff',
-      fontSize: '18px',
-      background: 'rgba(255, 255, 255, 0.1)',
-      padding: '20px 40px',
-      borderRadius: '12px',
-      backdropFilter: 'blur(10px)'
-    },
-    createButton: {
-      background: 'rgba(255, 255, 255, 0.2)',
-      color: '#ffffff',
-      padding: '10px 20px',
-      border: 'none',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      fontSize: '16px',
+      fontSize: { xs: '16px', sm: '18px' },
       fontWeight: '600',
-      transition: 'all 0.3s ease',
-      '&:hover': {
-        background: 'rgba(255, 255, 255, 0.3)',
-      }
+      lineHeight: '1.6'
     }
   };
 
+  if (loading) {
+    return (
+      <Box sx={styles.loadingContainer}>
+        <Box sx={{ 
+          width: '60px', 
+          height: '60px', 
+          border: '6px solid rgba(255, 255, 255, 0.3)',
+          borderTop: '6px solid #ffffff',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <Typography sx={styles.loadingText}>Loading entries...</Typography>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </Box>
+    );
+  }
+ 
+  if (error) {
+    return (
+      <Box sx={styles.errorContainer}>
+        <Box sx={styles.errorBox}>
+          <Box sx={styles.errorIcon}>⚠️</Box>
+          <Typography sx={styles.errorText}>{error}</Typography>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
-    <div style={styles.container}>
-      <div style={styles.headerActions}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Entry List</h1>
-          <p style={styles.subtitle}>
-            {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'} found
-          </p>
-        </div>
-        <Button
-          variant="contained"
-          sx={styles.createButton}
-          onClick={() => navigate('/add')}
-        >
-          Create New Entry
-        </Button>
-      </div>
+    <Box sx={styles.container}>
+      <Box sx={styles.backgroundPattern} />
+      
+      {/* Top Bar */}
+      <Box sx={styles.topBar}>
+        <Box sx={styles.headerSection}>
+          <Typography sx={styles.title}>
+            📋 Entry Directory
+          </Typography>
+          <Box sx={styles.subtitle}>
+            <Chip 
+              label={`${filteredEntries.length} ${filteredEntries.length === 1 ? 'entry' : 'entries'}`}
+              size="small"
+              sx={{ 
+                background: 'rgba(255, 255, 255, 0.25)',
+                color: '#ffffff',
+                fontWeight: '700',
+                fontSize: '14px'
+              }}
+            />
+          </Box>
+        </Box>
+        <Box sx={styles.actionButtons}>
+          <Button
+            variant="contained"
+            sx={styles.button}
+            onClick={() => navigate('/add')}
+          >
+            <AddCircleOutlineIcon />
+            New Entry
+          </Button>
+          <Button
+            variant="outlined"
+            sx={[styles.button, styles.logoutButton]}
+            onClick={handleLogout}
+          >
+            <LogoutIcon />
+            Logout
+          </Button>
+        </Box>
+      </Box>
 
-      <div style={styles.searchContainer}>
-        <input
-          type="text"
-          placeholder="Search by name or mobile number..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={styles.searchInput}
-        />
-        <span style={styles.searchIcon}>🔍</span>
-      </div>
+      {/* Search Section */}
+      <Box sx={styles.searchSection}>
+        <Box sx={styles.searchBox}>
+          <Box sx={styles.searchIconContainer}>
+            <SearchIcon sx={{ fontSize: { xs: '20px', sm: '24px' } }} />
+          </Box>
+          <input
+            type="text"
+            placeholder="Search by name or mobile number..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: window.innerWidth < 600 ? '16px 50px' : '18px 60px',
+              fontSize: window.innerWidth < 600 ? '15px' : '16px',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontWeight: '500',
+              color: '#1f2937'
+            }}
+          />
+        </Box>
+      </Box>
 
-      <div style={styles.listContainer}>
+      {/* Content */}
+      <Box sx={styles.contentContainer}>
         {filteredEntries.length > 0 ? (
-          <div style={styles.entryList}>
+          <Box sx={styles.gridContainer}>
             {filteredEntries.map((entry, index) => (
-              <div
-                key={index}
-                style={styles.entryCard}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(102, 126, 234, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
-                }}
-              >
-                <div style={styles.cardGradient}></div>
-                <div style={styles.entryName}>
-                  <span style={styles.nameIcon}>👤</span>
-                  {entry.name}
-                </div>
-                <div style={styles.entryMobile}>
-                  <span style={styles.mobileIcon}>📱</span>
-                  {entry.mobile}
-                </div>
-              </div>
+              <Card key={index} sx={styles.entryCard}>
+                <Box sx={styles.cardHeader}>
+                  <Typography sx={styles.cardTitle}>
+                    <PersonIcon sx={{ fontSize: '24px' }} />
+                    {entry.name}
+                  </Typography>
+                </Box>
+                <CardContent sx={styles.cardContent}>
+                  <Box sx={styles.infoRow}>
+                    <PhoneIcon sx={{ color: '#667eea', fontSize: '20px' }} />
+                    <Box>
+                      <Typography sx={styles.infoLabel}>Phone</Typography>
+                      <Typography sx={styles.infoValue}>{entry.mobile}</Typography>
+                    </Box>
+                  </Box>
+                  {entry.qrid && (
+                    <Box sx={{ ...styles.infoRow, borderBottom: 'none' }}>
+                      <Typography sx={styles.infoLabel}>QR ID</Typography>
+                      <Chip 
+                        label={entry.qrid} 
+                        size="small"
+                        sx={{ 
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: '#ffffff',
+                          fontWeight: '700'
+                        }}
+                      />
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
             ))}
-          </div>
+          </Box>
         ) : (
-          <div style={styles.noResults}>
-            <div style={styles.noResultsIcon}>🔍</div>
-            <p style={styles.noResultsText}>
-              No entries found matching "{searchQuery}"
-            </p>
-          </div>
+          <Box sx={styles.emptyState}>
+            <Box sx={styles.emptyIcon}>🔍</Box>
+            <Typography sx={styles.emptyTitle}>
+              No Entries Found
+            </Typography>
+            <Typography sx={styles.emptyText}>
+              {searchQuery 
+                ? `No results matching "${searchQuery}". Try a different search term.`
+                : "No entries available. Create your first entry to get started!"}
+            </Typography>
+          </Box>
         )}
-      </div>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

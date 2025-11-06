@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/login/login'
-import Add from './pages/add/add'
+import Add from './pages/add/add/'
 import EntryDetails from './pages/add/entrydetails'
 import { AuthService } from './pages/login/auth'
 
@@ -18,8 +18,9 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/add/:qrid?" element={<Add />} />
-        <Route path="/" element={<Add />} /> {/* Default route */}
+        <Route path="/add" element={<Add />} />
+        <Route path="/add/:qrid" element={<Add />} />
+        <Route path="/" element={<Navigate to="/add" replace />} /> {/* Default redirect */}
 
         {/* Protected Routes */}
         <Route path="/entry-details" element={

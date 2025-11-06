@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { TextField, Button, Paper, Typography, Box, InputAdornment } from '@mui/material';
+import { TextField, Button, Paper, Typography, Box, InputAdornment, Chip } from '@mui/material';
 import { useNavigate, Link } from 'react-router-dom';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import LoginIcon from '@mui/icons-material/Login';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 const Add = () => {
   const navigate = useNavigate();
@@ -11,6 +14,7 @@ const Add = () => {
     mobile: '',
     qrid: '' // ✅ will be auto-filled from URL
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ✅ Extract QRID from URL (the last part of the path)
   useEffect(() => {
@@ -28,6 +32,7 @@ const Add = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const response = await fetch(
         'https://rupse_crm_backend.poudelanish17.com.np/api/unprotected/v1/forms/insert',
@@ -49,110 +54,222 @@ const Add = () => {
     } catch (error) {
       console.error('Error:', error);
       alert('Error submitting form.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const styles = {
     pageContainer: {
       minHeight: '100vh',
-      background: '#f9fafb',
+      minWidth: '100vw',
+      width: '100%',
+      height: '100vh',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: { xs: 'flex-start', sm: 'center' },
-      padding: { xs: '1rem', sm: '1.5rem', md: '2rem' },
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      padding: '20px',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      overflow: 'auto',
+      boxSizing: 'border-box'
+    },
+    backgroundDecoration: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.1,
+      background: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)',
+      backgroundSize: '50px 50px',
+      pointerEvents: 'none'
     },
     formPaper: {
-      padding: { xs: '1.5rem', sm: '2rem', md: '3rem' }, // Increased padding for larger screens
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-      background: '#ffffff',
-      maxWidth: { sm: '540px', md: '600px'},
+      padding: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+      borderRadius: '20px',
+      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+      background: 'rgba(255, 255, 255, 0.98)',
+      backdropFilter: 'blur(10px)',
+      maxWidth: '500px',
       width: '100%',
-      marginTop: { xs: '2rem', sm: '0' }
+      position: 'relative',
+      zIndex: 1,
+      border: '1px solid rgba(255, 255, 255, 0.3)'
+    },
+    formHeader: {
+      textAlign: 'center',
+      marginBottom: '2rem'
+    },
+    iconContainer: {
+      width: '70px',
+      height: '70px',
+      margin: '0 auto 1rem',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      borderRadius: '20px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 8px 20px rgba(102, 126, 234, 0.4)'
     },
     formTitle: {
-      marginBottom: { xs: '1.5rem', sm: '2rem' },
       fontWeight: '800',
-      fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }, // Adjusted font size for desktop
+      fontSize: { xs: '1.75rem', sm: '2rem' },
       color: '#1f2937',
-      textAlign: 'center',
+      marginBottom: '0.5rem',
+      letterSpacing: '-0.5px'
+    },
+    formSubtitle: {
+      color: '#6b7280',
+      fontSize: '0.95rem',
+      fontWeight: '400'
     },
     textField: {
-      marginBottom: { xs: '1rem', sm: '1.5rem' },
+      marginBottom: '1.5rem',
       '& .MuiOutlinedInput-root': {
-        borderRadius: '8px',
-        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#2563eb',
-          boxShadow: '0 0 0 3px rgba(37, 99, 235, 0.1)',
+        borderRadius: '12px',
+        backgroundColor: '#f9fafb',
+        transition: 'all 0.3s ease',
+        '& fieldset': {
+          borderColor: '#e5e7eb',
+          borderWidth: '2px'
+        },
+        '&:hover fieldset': {
+          borderColor: '#667eea',
+        },
+        '&.Mui-focused': {
+          backgroundColor: '#ffffff',
+          '& fieldset': {
+            borderColor: '#667eea',
+            borderWidth: '2px'
+          }
         }
       },
-      '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: '#d1d5db'
-      },
       '& .MuiInputLabel-root': {
-        color: '#6c757d',
+        color: '#6b7280',
+        fontWeight: '500'
       },
       '& .MuiInputLabel-root.Mui-focused': {
-        color: '#2563eb'
+        color: '#667eea',
+        fontWeight: '600'
+      },
+      '& .MuiOutlinedInput-input': {
+        padding: '16px 14px',
+        fontSize: '1rem'
       }
     },
     submitButton: {
-      marginTop: '16px',
-      padding: { xs: '10px', sm: '12px' },
-      borderRadius: '8px',
-      background: '#2563eb',
+      marginTop: '1rem',
+      padding: '14px',
+      borderRadius: '12px',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: '#ffffff',
-      fontSize: '16px',
-      fontWeight: '600',
+      fontSize: '1.05rem',
+      fontWeight: '700',
       textTransform: 'none',
+      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+      transition: 'all 0.3s ease',
       '&:hover': {
-        background: '#1d4ed8',
+        background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
+        transform: 'translateY(-2px)',
+        boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
+      },
+      '&:disabled': {
+        background: '#9ca3af',
+        color: '#ffffff',
+        opacity: 0.7
       }
     },
     headerButtons: {
       position: 'absolute',
-      top: '20px',
-      right: { xs: '1rem', sm: '1.5rem', md: '2rem' },
+      top: { xs: '15px', sm: '25px' },
+      right: { xs: '15px', sm: '25px' },
       display: 'flex',
-      gap: '1rem'
+      gap: '0.75rem',
+      zIndex: 2,
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end'
     },
-    linkButton: {
-      color: '#1f2937',
+    navButton: {
+      background: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(10px)',
+      color: '#667eea',
       fontWeight: '600',
       textTransform: 'none',
-      textDecoration: 'none'
+      borderRadius: '10px',
+      padding: '8px 16px',
+      fontSize: '0.9rem',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+      textDecoration: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      transition: 'all 0.3s ease',
+      border: '1px solid rgba(255, 255, 255, 0.3)',
+      '&:hover': {
+        background: '#ffffff',
+        transform: 'translateY(-2px)',
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+      }
+    },
+    qrChip: {
+      marginTop: '1rem',
+      display: 'flex',
+      justifyContent: 'center'
     }
   };
 
   return (
     <Box sx={styles.pageContainer}>
+      <Box sx={styles.backgroundDecoration} />
+      
       <Box sx={styles.headerButtons}>
-        <Link to="/entry-details" style={styles.linkButton}>
-          Entry List
+        <Link to="/entry-details" style={{ textDecoration: 'none' }}>
+          <Box sx={styles.navButton}>
+            <ListAltIcon sx={{ fontSize: '1.1rem' }} />
+            Entry List
+          </Box>
         </Link>
-        <Link to="/login" style={styles.linkButton}>
-          Login
+        <Link to="/login" style={{ textDecoration: 'none' }}>
+          <Box sx={styles.navButton}>
+            <LoginIcon sx={{ fontSize: '1.1rem' }} />
+            Login
+          </Box>
         </Link>
       </Box>
+
       <Paper component="main" elevation={0} sx={styles.formPaper}>
-        <Typography variant="h5" component="h1" sx={styles.formTitle}>
-          Add Contact
-        </Typography>
+        <Box sx={styles.formHeader}>
+          <Box sx={styles.iconContainer}>
+            <AddCircleOutlineIcon sx={{ fontSize: '2.5rem', color: '#ffffff' }} />
+          </Box>
+          <Typography variant="h4" component="h1" sx={styles.formTitle}>
+            Add New Contact
+          </Typography>
+          <Typography sx={styles.formSubtitle}>
+            Fill in the details to create a new entry
+          </Typography>
+        </Box>
+
         <form onSubmit={handleSubmit} noValidate>
           <TextField
             fullWidth
-            label="Name"
+            label="Full Name"
             name="name"
             value={formData.name}
             onChange={handleInputChange}
             sx={styles.textField}
             required
+            placeholder="Enter full name"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <PersonOutlineIcon />
+                  <PersonOutlineIcon sx={{ color: '#667eea' }} />
                 </InputAdornment>
               ),
             }}
@@ -166,21 +283,24 @@ const Add = () => {
             onChange={handleInputChange}
             sx={styles.textField}
             required
+            placeholder="Enter phone number"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <PhoneAndroidIcon />
+                  <PhoneAndroidIcon sx={{ color: '#667eea' }} />
                 </InputAdornment>
               ),
             }}
           />
+
           <Button
             variant="contained"
             type="submit"
             sx={styles.submitButton}
             fullWidth
+            disabled={isSubmitting}
           >
-            Submit
+            {isSubmitting ? 'Submitting...' : 'Submit Entry'}
           </Button>
         </form>
       </Paper>
