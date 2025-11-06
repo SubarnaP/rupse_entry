@@ -1,11 +1,16 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import Login from './pages/login/login'
-import Add from './pages/add/add/'
-import EntryDetails from './pages/add/entrydetails'
-import { AuthService } from './pages/login/auth'
+import Login from './pages/login/login.tsx'
+import Add from './pages/add/add.tsx'
+import EntryDetails from './pages/add/entrydetails.tsx'
+import { AuthService } from './pages/login/auth.tsx'
+import { type ReactNode } from 'react'
 
 // Protected Route wrapper component
-const ProtectedRoute = ({ children }) => {
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (!AuthService.isAuthenticated()) {
     return <Navigate to="/login" replace />
   }

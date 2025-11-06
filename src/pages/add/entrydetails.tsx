@@ -1,104 +1,46 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import type { ChangeEvent } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, CardContent, Typography, Box, Chip, Divider, Skeleton } from "@mui/material";
-import { useAuthGuard } from "../login/auth.jsx"; // ✅ Import authentication guard
+import { Button, Card, CardContent, Typography, Box, Chip } from "@mui/material";
+import { useAuthGuard } from "../login/auth";
 import PersonIcon from '@mui/icons-material/Person';
 import PhoneIcon from '@mui/icons-material/Phone';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import LogoutIcon from '@mui/icons-material/Logout';
 
-const EntryDetails = () => {
+interface Entry {
+  name: string;
+  mobile: string;
+  qr?: string | number;
+  [key: string]: unknown;
+}
+
+interface GroupedEntries {
+  [qrid: string]: Entry[];
+}
+
+interface ColorScheme {
+  bg: string;
+  badge: string;
+  light: string;
+}
+
+const EntryDetails: React.FC = () => {
   const navigate = useNavigate();
   useAuthGuard(); // ✅ Protect this page
 
-  const [entries, setEntries] = useState([]);
-  const [filteredEntries, setFilteredEntries] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [groupedEntries, setGroupedEntries] = useState({});
-  const [urlQRID, setUrlQRID] = useState(null); // ✅ Store QRID from URL
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [filteredEntries, setFilteredEntries] = useState<Entry[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [groupedEntries, setGroupedEntries] = useState<GroupedEntries>({});
+  const [urlQRID, setUrlQRID] = useState<string | null>(null); // ✅ Store QRID from URL
 
-  // ✅ Extract QRID from URL (same logic as add.jsx)
-  useEffect(() => {
-    const urlParts = window.location.pathname.split('/');
-    const lastPart = urlParts[urlParts.length - 1];
-    
-    console.log('Entry Details - URL pathname:', window.location.pathname);
-    console.log('Entry Details - Last part:', lastPart);
-    
-    // Check if lastPart exists and is not 'entry-details'
-    if (lastPart && lastPart !== 'entry-details' && lastPart.trim() !== '') {
-      console.log('Entry Details - Setting QRID filter to:', lastPart);
-      setUrlQRID(lastPart);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchEntries();
-  }, []);
-
-  // ✅ Group entries by QRID whenever entries or search changes
-  useEffect(() => {
-    let filtered = entries.filter(
-      (entry) =>
-        entry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        entry.mobile.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    
-    // ✅ If QRID is in URL, filter entries to show only that QRID
-    if (urlQRID) {
-      const qridNumber = urlQRID; // Keep as string to match backend format
-      filtered = filtered.filter(entry => entry.qr === qridNumber || entry.qr === parseInt(qridNumber, 10));
-      console.log(`Filtering entries for QR ID: ${qridNumber}`, filtered);
-    }
-    
-    setFilteredEntries(filtered);
-    
-    // Group filtered entries by QR ID (from backend it's 'qr' field, not 'qrid')
-    const grouped = filtered.reduce((acc, entry) => {
-      const qrId = entry.qr || 'No QR ID';
-      if (!acc[qrId]) {
-        acc[qrId] = [];
-      }
-      acc[qrId].push(entry);
-      return acc;
-    }, {});
-    
-    // ✅ Sort each QR ID group by name
-    Object.keys(grouped).forEach(qrId => {
-      grouped[qrId].sort((a, b) => a.name.localeCompare(b.name));
-    });
-    
-    setGroupedEntries(grouped);
-  }, [searchQuery, entries, urlQRID]);
-
-  // ✅ Function to generate consistent colors for each QRID
-  const getQRIDColor = (qrid) => {
-    const colors = [
-      { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', badge: '#667eea', light: 'rgba(102, 126, 234, 0.1)' },
-      { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', badge: '#f093fb', light: 'rgba(240, 147, 251, 0.1)' },
-      { bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', badge: '#4facfe', light: 'rgba(79, 172, 254, 0.1)' },
-      { bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', badge: '#43e97b', light: 'rgba(67, 233, 123, 0.1)' },
-      { bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', badge: '#fa709a', light: 'rgba(250, 112, 154, 0.1)' },
-      { bg: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)', badge: '#30cfd0', light: 'rgba(48, 207, 208, 0.1)' },
-      { bg: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', badge: '#a8edea', light: 'rgba(168, 237, 234, 0.1)' },
-      { bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', badge: '#ff9a9e', light: 'rgba(255, 154, 158, 0.1)' },
-      { bg: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', badge: '#fcb69f', light: 'rgba(252, 182, 159, 0.1)' },
-      { bg: 'linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%)', badge: '#ff6e7f', light: 'rgba(255, 110, 127, 0.1)' },
-    ];
-    
-    // Use QRID to consistently pick a color
-    const index = typeof qrid === 'string' && qrid !== 'No QR ID' 
-      ? parseInt(qrid) % colors.length 
-      : Math.abs(qrid?.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0) % colors.length;
-    
-    return colors[index];
-  };
-
-  const fetchEntries = async () => {
+  // ✅ Function to fetch entries
+  const fetchEntries = useCallback(async (): Promise<void> => {
     try {
       const token = localStorage.getItem("token");
       
@@ -136,7 +78,7 @@ const EntryDetails = () => {
     } catch (err) {
       console.error("Detailed error:", err);
       
-      if (err.response) {
+      if (axios.isAxiosError(err) && err.response) {
         // Server responded with error
         console.log("Error response:", err.response);
         if (err.response.status === 401) {
@@ -146,7 +88,7 @@ const EntryDetails = () => {
         } else {
           setError(`Server error: ${err.response.data.message || 'Unknown error'}`);
         }
-      } else if (err.request) {
+      } else if (axios.isAxiosError(err) && err.request) {
         // Request made but no response
         setError("Could not connect to server. Please check your internet connection.");
       } else {
@@ -154,9 +96,86 @@ const EntryDetails = () => {
       }
       setLoading(false);
     }
+  }, [navigate]);
+
+  // ✅ Extract QRID from URL (same logic as add.tsx)
+  useEffect(() => {
+    const urlParts = window.location.pathname.split('/');
+    const lastPart = urlParts[urlParts.length - 1];
+    
+    console.log('Entry Details - URL pathname:', window.location.pathname);
+    console.log('Entry Details - Last part:', lastPart);
+    
+    // Check if lastPart exists and is not 'entry-details'
+    if (lastPart && lastPart !== 'entry-details' && lastPart.trim() !== '') {
+      console.log('Entry Details - Setting QRID filter to:', lastPart);
+      setUrlQRID(lastPart);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEntries();
+  }, [fetchEntries]);
+
+  // ✅ Group entries by QRID whenever entries or search changes
+  useEffect(() => {
+    let filtered = entries.filter(
+      (entry) =>
+        entry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        entry.mobile.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    // ✅ If QRID is in URL, filter entries to show only that QRID
+    if (urlQRID) {
+      const qridNumber = urlQRID; // Keep as string to match backend format
+      filtered = filtered.filter(entry => entry.qr === qridNumber || entry.qr === parseInt(qridNumber, 10));
+      console.log(`Filtering entries for QR ID: ${qridNumber}`, filtered);
+    }
+    
+    setFilteredEntries(filtered);
+    
+    // Group filtered entries by QR ID (from backend it's 'qr' field, not 'qrid')
+    const grouped = filtered.reduce((acc: GroupedEntries, entry) => {
+      const qrId = entry.qr?.toString() || 'No QR ID';
+      if (!acc[qrId]) {
+        acc[qrId] = [];
+      }
+      acc[qrId].push(entry);
+      return acc;
+    }, {});
+    
+    // ✅ Sort each QR ID group by name
+    Object.keys(grouped).forEach(qrId => {
+      grouped[qrId].sort((a, b) => a.name.localeCompare(b.name));
+    });
+    
+    setGroupedEntries(grouped);
+  }, [searchQuery, entries, urlQRID]);
+
+  // ✅ Function to generate consistent colors for each QRID
+  const getQRIDColor = (qrid: string): ColorScheme => {
+    const colors: ColorScheme[] = [
+      { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', badge: '#667eea', light: 'rgba(102, 126, 234, 0.1)' },
+      { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', badge: '#f093fb', light: 'rgba(240, 147, 251, 0.1)' },
+      { bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', badge: '#4facfe', light: 'rgba(79, 172, 254, 0.1)' },
+      { bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', badge: '#43e97b', light: 'rgba(67, 233, 123, 0.1)' },
+      { bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', badge: '#fa709a', light: 'rgba(250, 112, 154, 0.1)' },
+      { bg: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)', badge: '#30cfd0', light: 'rgba(48, 207, 208, 0.1)' },
+      { bg: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', badge: '#a8edea', light: 'rgba(168, 237, 234, 0.1)' },
+      { bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', badge: '#ff9a9e', light: 'rgba(255, 154, 158, 0.1)' },
+      { bg: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', badge: '#fcb69f', light: 'rgba(252, 182, 159, 0.1)' },
+      { bg: 'linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%)', badge: '#ff6e7f', light: 'rgba(255, 110, 127, 0.1)' },
+    ];
+    
+    // Use QRID to consistently pick a color
+    const index = qrid !== 'No QR ID' 
+      ? parseInt(qrid) % colors.length 
+      : Math.abs(qrid.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % colors.length;
+    
+    return colors[index];
   };
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     localStorage.removeItem("token");
     navigate('/login');
   };
@@ -574,7 +593,7 @@ const EntryDetails = () => {
             type="text"
             placeholder="Search by name or mobile number..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
               padding: window.innerWidth < 600 ? '16px 50px' : '18px 60px',

@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from './auth';
 import './login.css';
 
-const Login = () => {
+interface Credentials {
+  email: string;
+  password: string;
+}
+
+const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({
+  const [credentials, setCredentials] = useState<Credentials>({
     email: '',
     password: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
-  // ✅ FIXED: Remove TypeScript type annotation
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setCredentials({
       ...credentials,
       [e.target.name]: e.target.value
@@ -21,8 +26,7 @@ const Login = () => {
     setError('');
   };
 
-  // ✅ FIXED: Remove TypeScript type annotation
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
@@ -32,7 +36,7 @@ const Login = () => {
       await AuthService.login(credentials.email, credentials.password);
       navigate('/entry-details'); // Updated to redirect to entry-details
     } catch (err) {
-      setError(err.message || 'Invalid credentials');
+      setError((err as Error).message || 'Invalid credentials');
     } finally {
       setIsLoading(false);
     }

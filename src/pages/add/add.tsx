@@ -1,20 +1,32 @@
 import { useState, useEffect } from 'react';
-import { TextField, Button, Paper, Typography, Box, InputAdornment, Chip } from '@mui/material';
-import { useNavigate, Link } from 'react-router-dom';
+import type { ChangeEvent, FormEvent } from 'react';
+import { TextField, Button, Paper, Typography, Box, InputAdornment } from '@mui/material';
+import { Link } from 'react-router-dom';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import LoginIcon from '@mui/icons-material/Login';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
-const Add = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+interface FormData {
+  name: string;
+  mobile: string;
+  qrid: string;
+}
+
+interface FormDataToSend {
+  name: string;
+  mobile: string;
+  qrid: number | null;
+}
+
+const Add: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     mobile: '',
     qrid: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // ✅ Extract QRID from URL (the last part of the path)
   useEffect(() => {
@@ -34,17 +46,17 @@ const Add = () => {
     }
   }, []);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setIsSubmitting(true);
     
     // ✅ Prepare data with QRID as number if it exists
-    const dataToSend = {
+    const dataToSend: FormDataToSend = {
       name: formData.name,
       mobile: formData.mobile,
       qrid: formData.qrid ? parseInt(formData.qrid, 10) : null
@@ -93,7 +105,7 @@ const Add = () => {
       }
     } catch (error) {
       console.error('Network or other error:', error);
-      alert('Error submitting form: ' + error.message);
+      alert('Error submitting form: ' + (error as Error).message);
     } finally {
       setIsSubmitting(false);
     }
@@ -349,4 +361,3 @@ const Add = () => {
 };
 
 export default Add;
-       

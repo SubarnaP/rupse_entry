@@ -1,19 +1,38 @@
-// auth.jsx
+// auth.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = "https://rupse_crm_backend.poudelanish17.com.np/api";
 
+interface LoginResponse {
+  token?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+interface ApiRequestOptions {
+  method?: string;
+  body?: unknown;
+  isUpload?: boolean;
+}
+
+interface ApiResponse {
+  ok: boolean;
+  status: number;
+  json: () => Promise<unknown>;
+  text: () => Promise<string>;
+}
+
 // ✅ Auth Service
 export const AuthService = {
-  async login(email, password) {
+  async login(email: string, password: string): Promise<LoginResponse> {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await res.json().catch(() => ({}));
+    const data: LoginResponse = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || "Invalid credentials");
 
     const token = (data.token || "").trim();
@@ -22,16 +41,16 @@ export const AuthService = {
     return data;
   },
 
-  logout() {
+  logout(): void {
     localStorage.clear();
     window.location.href = "/login";
   },
 
-  getToken() {
+  getToken(): string {
     return (localStorage.getItem("token") || "").trim();
   },
 
-  getUser() {
+  getUser(): Record<string, unknown> {
     try {
       return JSON.parse(localStorage.getItem("user") || "{}");
     } catch {
@@ -39,7 +58,7 @@ export const AuthService = {
     }
   },
 
-  isAuthenticated() {
+  isAuthenticated(): boolean {
     const token = this.getToken();
     if (!token) return false;
     
@@ -60,9 +79,9 @@ export const AuthService = {
 
 // ✅ API Service using fetch (no axios dependency)
 export const apiService = {
-  async request(endpoint, { method = "POST", body, isUpload = false } = {}) {
+  async request(endpoint: string, { method = "POST", body, isUpload = false }: ApiRequestOptions = {}): Promise<ApiResponse> {
     const token = AuthService.getToken();
-    const headers = {};
+    const headers: Record<string, string> = {};
     
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
@@ -72,10 +91,10 @@ export const apiService = {
       headers["Content-Type"] = "application/json";
     }
 
-    const config = {
+    const config: RequestInit = {
       method,
       headers,
-      body: isUpload ? body : JSON.stringify(body),
+      body: isUpload ? (body as BodyInit) : JSON.stringify(body),
     };
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
@@ -102,16 +121,16 @@ export const apiService = {
     };
   },
 
-  get: (url) => apiService.request(url, { method: "GET" }),
-  post: (url, data) => apiService.request(url, { method: "POST", body: data }),
-  put: (url, data) => apiService.request(url, { method: "PUT", body: data }),
-  delete: (url) => apiService.request(url, { method: "DELETE" }),
-  upload: (url, formData) =>
+  get: (url: string) => apiService.request(url, { method: "GET" }),
+  post: (url: string, data: unknown) => apiService.request(url, { method: "POST", body: data }),
+  put: (url: string, data: unknown) => apiService.request(url, { method: "PUT", body: data }),
+  delete: (url: string) => apiService.request(url, { method: "DELETE" }),
+  upload: (url: string, formData: FormData) =>
     apiService.request(url, { method: "POST", body: formData, isUpload: true }),
 };
 
 // ✅ Protect routes
-export const useAuthGuard = () => {
+export const useAuthGuard = (): void => {
   const navigate = useNavigate();
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
